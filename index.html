@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>方琮《仿王希孟江山千里卷》· 3D 青綠山水長卷</title>
+  <style>
+    :root {
+      --silk-bg: #dad5c2;
+      --silk-panel: rgba(244, 239, 224, 0.9);
+      --silk-border: rgba(112, 96, 68, 0.38);
+      --ink: #24201b;
+      --ink-muted: #5b5142;
+      --azurite: #1c556e;
+      --malachite: #2f6c53;
+      --seal-red: #b2382b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--silk-bg);
+      font-family: "Noto Serif TC", "Noto Serif SC", "Songti TC", "PMingLiU", "SimSun", Georgia, serif;
+      color: var(--ink);
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+
+    .silk-vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 58%, rgba(112, 92, 58, 0.22) 100%);
+      z-index: 2;
+    }
+
+    .title-badge {
+      position: fixed;
+      top: 16px;
+      left: 18px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 15px;
+      background: var(--silk-panel);
+      border: 1px solid var(--silk-border);
+      border-radius: 6px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 20px rgba(36, 32, 27, 0.14);
+      max-width: 440px;
+    }
+
+    .seal-stamp {
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      background: var(--seal-red);
+      color: #f9f2e3;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: 1px;
+      box-shadow: inset 0 0 0 1.5px rgba(249, 242, 227, 0.55);
+      flex-shrink: 0;
+    }
+
+    .title-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--ink);
+    }
+
+    .title-text p {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      letter-spacing: 0.4px;
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+
+    .toolbar {
+      position: fixed;
+      top: 16px;
+      right: 18px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px;
+      background: var(--silk-panel);
+      border: 1px solid var(--silk-border);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 20px rgba(36, 32, 27, 0.14);
+    }
+
+    .tool-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--silk-border);
+      margin: 0 2px;
+    }
+
+    .tool-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 6px 11px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      letter-spacing: 0.5px;
+    }
+
+    .tool-btn:hover {
+      background: rgba(28, 85, 110, 0.11);
+      border-color: rgba(28, 85, 110, 0.25);
+    }
+
+    .tool-btn.active {
+      background: var(--azurite);
+      color: #f7f1e1;
+      border-color: var(--azurite);
+    }
+
+    .tool-btn.tour-active {
+      background: var(--seal-red);
+      color: #f9f2e3;
+      border-color: var(--seal-red);
+    }
+
+    .zoom-btn {
+      width: 28px;
+      padding: 6px 0;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .spots-panel {
+      position: fixed;
+      top: 72px;
+      right: 18px;
+      z-index: 10;
+      width: 164px;
+      background: var(--silk-panel);
+      border: 1px solid var(--silk-border);
+      border-radius: 8px;
+      padding: 10px 8px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 20px rgba(36, 32, 27, 0.14);
+    }
+
+    .spots-header {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 1px;
+      text-align: center;
+      padding-bottom: 6px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--silk-border);
+    }
+
+    .spots-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: calc(100vh - 235px);
+      overflow-y: auto;
+    }
+
+    .spot-btn {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 6px 9px;
+      font-family: inherit;
+      font-size: 12.5px;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.18s ease;
+    }
+
+    .spot-btn .spot-idx {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      opacity: 0.75;
+    }
+
+    .spot-btn:hover {
+      background: rgba(47, 108, 83, 0.12);
+      border-color: rgba(47, 108, 83, 0.28);
+    }
+
+    .spot-btn.active {
+      background: linear-gradient(90deg, rgba(28, 85, 110, 0.94), rgba(47, 108, 83, 0.94));
+      color: #f9f3e5;
+      font-weight: 600;
+    }
+
+    .spot-btn.active .spot-idx {
+      color: rgba(249, 243, 229, 0.85);
+    }
+
+    .spot-card {
+      position: fixed;
+      left: 18px;
+      bottom: 106px;
+      z-index: 10;
+      width: 330px;
+      background: var(--silk-panel);
+      border: 1px solid var(--silk-border);
+      border-left: 4px solid var(--azurite);
+      border-radius: 8px;
+      padding: 13px 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 26px rgba(36, 32, 27, 0.16);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .spot-card.hidden {
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+    }
+
+    .spot-card-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      padding-right: 16px;
+    }
+
+    .spot-card-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--azurite);
+      letter-spacing: 1px;
+    }
+
+    .spot-card-tag {
+      font-size: 11px;
+      color: var(--seal-red);
+      border: 1px solid rgba(178, 56, 43, 0.4);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .spot-card-desc {
+      font-size: 12.8px;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+
+    .spot-card-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--ink-muted);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .minimap-bar {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: min(860px, calc(100vw - 36px));
+      background: var(--silk-panel);
+      border: 1px solid var(--silk-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 24px rgba(36, 32, 27, 0.16);
+    }
+
+    .minimap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-bottom: 5px;
+      letter-spacing: 0.4px;
+    }
+
+    .minimap-track {
+      position: relative;
+      width: 100%;
+      height: 44px;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(112, 92, 58, 0.35);
+      cursor: pointer;
+      background: #dad3be;
+    }
+
+    #minimap-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #minimap-viewport {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 12%;
+      border: 2px solid var(--seal-red);
+      background: rgba(178, 56, 43, 0.14);
+      pointer-events: none;
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div class="silk-vignette"></div>
+
+  <div class="title-badge">
+    <div class="seal-stamp">千里<br/>江山</div>
+    <div class="title-text">
+      <h1>方琮《仿王希孟江山千里卷》· 3D 青綠長卷</h1>
+      <p>清·方琮 仿王希孟青綠山水長卷 · 依原圖展幅比例 1:1 構建（由右至左展卷）</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="btn-3d" class="tool-btn active">3D 視圖</button>
+    <button id="btn-scroll" class="tool-btn">長卷視圖</button>
+    <div class="tool-sep"></div>
+    <button id="btn-zoom-in" class="tool-btn zoom-btn" title="放大">＋</button>
+    <button id="btn-zoom-out" class="tool-btn zoom-btn" title="縮小">－</button>
+    <div class="tool-sep"></div>
+    <button id="btn-reset" class="tool-btn">復位</button>
+    <button id="btn-tour" class="tool-btn">導覽（右→左）</button>
+  </div>
+
+  <aside class="spots-panel">
+    <div class="spots-header">原卷展幅分段（右→左）</div>
+    <div id="spots-list" class="spots-list"></div>
+  </aside>
+
+  <div id="spot-card" class="spot-card hidden">
+    <button id="spot-card-close" class="spot-card-close" title="關閉">×</button>
+    <div class="spot-card-header">
+      <span id="spot-card-title" class="spot-card-title"></span>
+      <span id="spot-card-tag" class="spot-card-tag"></span>
+    </div>
+    <div id="spot-card-desc" class="spot-card-desc"></div>
+  </div>
+
+  <div class="minimap-bar">
+    <div class="minimap-header">
+      <span>← 卷尾雙峰（左）　｜　原畫長卷縮圖（點擊或拖曳瀏覽全卷）　｜　卷首四印（右）→</span>
+      <span id="coords-hint">左鍵拖動／旋轉 · 滾輪或 ＋－ 放大縮小</span>
+    </div>
+    <div id="minimap-track" class="minimap-track">
+      <canvas id="minimap-canvas" width="840" height="44"></canvas>
+      <div id="minimap-viewport"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
