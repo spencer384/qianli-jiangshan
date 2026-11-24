@@ -125,6 +125,16 @@ controls.dampingFactor = 0.07;
 controls.maxPolarAngle = Math.PI * 0.47;
 controls.minDistance = 8;
 controls.maxDistance = 260;
+controls.screenSpacePanning = false;
+controls.mouseButtons = {
+  LEFT: THREE.MOUSE.PAN,
+  MIDDLE: THREE.MOUSE.DOLLY,
+  RIGHT: THREE.MOUSE.ROTATE,
+};
+controls.touches = {
+  ONE: THREE.TOUCH.PAN,
+  TWO: THREE.TOUCH.DOLLY_ROTATE,
+};
 controls.target.copy(OVERVIEW_TARGET);
 
 // --- Lighting ---
@@ -207,19 +217,9 @@ function setViewMode(mode) {
   document.getElementById('btn-scroll').classList.toggle('active', mode === 'scroll');
 
   if (mode === 'scroll') {
-    controls.mouseButtons = {
-      LEFT: THREE.MOUSE.PAN,
-      MIDDLE: THREE.MOUSE.DOLLY,
-      RIGHT: THREE.MOUSE.ROTATE,
-    };
     const cx = THREE.MathUtils.clamp(controls.target.x, -265, 265);
     flyTo(new THREE.Vector3(cx, 28, 94), new THREE.Vector3(cx, 9, -4), 1.0);
   } else {
-    controls.mouseButtons = {
-      LEFT: THREE.MOUSE.ROTATE,
-      MIDDLE: THREE.MOUSE.DOLLY,
-      RIGHT: THREE.MOUSE.PAN,
-    };
     flyTo(OVERVIEW_POS, OVERVIEW_TARGET, 1.0);
   }
 }
