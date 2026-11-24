@@ -194,6 +194,11 @@ function selectSpot(spot, fromTour = false) {
   } else {
     flyTo(spot.pos, spot.target, 1.25);
   }
+
+  // On narrow mobile screens, auto-collapse the spots drawer after choosing a spot
+  if (!fromTour && window.innerWidth <= 768) {
+    setSpotsOpen(false);
+  }
 }
 
 function setViewMode(mode) {
@@ -223,8 +228,24 @@ function stopTour() {
   tourActive = false;
   const btn = document.getElementById('btn-tour');
   btn.classList.remove('tour-active');
-  btn.textContent = '導覽（右→左）';
+  btn.textContent = '導覽';
 }
+
+const spotsPanelEl = document.getElementById('spots-panel');
+const btnSpotsToggle = document.getElementById('btn-spots-toggle');
+
+function setSpotsOpen(open) {
+  spotsPanelEl.classList.toggle('collapsed', !open);
+  btnSpotsToggle.classList.toggle('active', open);
+}
+
+// Collapse spots drawer by default on mobile so the 3D scroll is unobstructed
+setSpotsOpen(window.innerWidth > 768);
+
+btnSpotsToggle.addEventListener('click', () => {
+  setSpotsOpen(spotsPanelEl.classList.contains('collapsed'));
+});
+document.getElementById('spots-close').addEventListener('click', () => setSpotsOpen(false));
 
 function toggleTour() {
   if (tourActive) {

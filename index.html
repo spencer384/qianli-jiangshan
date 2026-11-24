@@ -346,6 +346,137 @@
       background: rgba(178, 56, 43, 0.14);
       pointer-events: none;
     }
+
+    .spots-panel {
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .spots-panel.collapsed {
+      opacity: 0;
+      transform: translateX(18px);
+      pointer-events: none;
+    }
+
+    .spots-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 6px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--silk-border);
+    }
+
+    .spots-header-row .spots-header {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+
+    .spots-close-btn {
+      background: none;
+      border: none;
+      color: var(--ink-muted);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 2px;
+    }
+
+    @media (max-width: 768px) {
+      .title-badge {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        padding: 7px 10px;
+        gap: 9px;
+      }
+      .seal-stamp {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+      }
+      .title-text {
+        min-width: 0;
+        overflow: hidden;
+      }
+      .title-text h1 {
+        font-size: 13.5px;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .title-text p {
+        font-size: 10.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .toolbar {
+        top: 64px;
+        left: 10px;
+        right: 10px;
+        padding: 4px 5px;
+        gap: 4px;
+        justify-content: space-between;
+        overflow-x: auto;
+      }
+      .tool-btn {
+        font-size: 11.5px;
+        padding: 5px 7px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .zoom-btn {
+        width: 26px;
+        padding: 5px 0;
+      }
+      .spots-panel {
+        top: 108px;
+        right: 10px;
+        width: 176px;
+        z-index: 15;
+      }
+      .spots-list {
+        max-height: calc(100vh - 230px);
+      }
+      .minimap-bar {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        transform: none;
+        width: auto;
+        padding: 6px 8px;
+      }
+      .minimap-header {
+        font-size: 10px;
+        justify-content: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #coords-hint {
+        display: none;
+      }
+      .minimap-track {
+        height: 36px;
+      }
+      .spot-card {
+        left: 10px;
+        right: 10px;
+        bottom: 92px;
+        width: auto;
+        padding: 10px 12px;
+      }
+      .spot-card-title {
+        font-size: 14.5px;
+      }
+      .spot-card-desc {
+        font-size: 12px;
+        line-height: 1.5;
+      }
+    }
   </style>
 
   <script type="importmap">
@@ -377,11 +508,15 @@
     <button id="btn-zoom-out" class="tool-btn zoom-btn" title="縮小">－</button>
     <div class="tool-sep"></div>
     <button id="btn-reset" class="tool-btn">復位</button>
-    <button id="btn-tour" class="tool-btn">導覽（右→左）</button>
+    <button id="btn-tour" class="tool-btn">導覽</button>
+    <button id="btn-spots-toggle" class="tool-btn active">分段</button>
   </div>
 
-  <aside class="spots-panel">
-    <div class="spots-header">原卷展幅分段（右→左）</div>
+  <aside id="spots-panel" class="spots-panel">
+    <div class="spots-header-row">
+      <div class="spots-header">展幅分段（右→左）</div>
+      <button id="spots-close" class="spots-close-btn" title="收合分段">×</button>
+    </div>
     <div id="spots-list" class="spots-list"></div>
   </aside>
 
