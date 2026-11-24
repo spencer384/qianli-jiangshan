@@ -1,18 +1,61 @@
 import * as THREE from 'three';
 import { getTerrainHeight, getCentralBridgeY, getRightBridgeY, WATER_LEVEL } from './terrain.js';
 
+function createRoofTileTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#2d373d';
+  ctx.fillRect(0, 0, 256, 256);
+  for (let x = 0; x < 256; x += 16) {
+    ctx.fillStyle = x % 32 === 0 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.22)';
+    ctx.fillRect(x, 0, 5, 256);
+  }
+  for (let y = 0; y < 256; y += 24) {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(0, y, 256, 3);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(3, 3);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createWoodTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#5a3a22';
+  ctx.fillRect(0, 0, 128, 128);
+  for (let y = 0; y < 128; y += 4) {
+    ctx.fillStyle = y % 16 === 0 ? 'rgba(25,14,6,0.35)' : 'rgba(255,235,210,0.05)';
+    ctx.fillRect(0, y, 128, 2);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(2, 2);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const roofTileTex = createRoofTileTexture();
+const woodTex = createWoodTexture();
+
 const mats = {
-  timber: new THREE.MeshStandardMaterial({ color: '#563720', roughness: 0.84 }),
+  timber: new THREE.MeshStandardMaterial({ map: woodTex, bumpMap: woodTex, bumpScale: 0.04, roughness: 0.82 }),
   darkTimber: new THREE.MeshStandardMaterial({ color: '#382416', roughness: 0.88 }),
-  vermilion: new THREE.MeshStandardMaterial({ color: '#a33324', roughness: 0.68 }),
+  vermilion: new THREE.MeshStandardMaterial({ color: '#a33324', roughness: 0.65 }),
   wall: new THREE.MeshStandardMaterial({ color: '#ebe2cc', roughness: 0.9 }),
   windowGlow: new THREE.MeshStandardMaterial({
     color: '#f5d48e',
     emissive: '#d99b38',
-    emissiveIntensity: 0.45,
-    roughness: 0.6,
+    emissiveIntensity: 0.55,
+    roughness: 0.55,
   }),
-  roofDark: new THREE.MeshStandardMaterial({ color: '#2b353b', roughness: 0.72 }),
+  roofDark: new THREE.MeshStandardMaterial({ map: roofTileTex, bumpMap: roofTileTex, bumpScale: 0.08, roughness: 0.68 }),
   thatch: new THREE.MeshStandardMaterial({ color: '#ad9458', roughness: 0.92 }),
   stone: new THREE.MeshStandardMaterial({ color: '#827e73', roughness: 0.9 }),
   gold: new THREE.MeshStandardMaterial({ color: '#c9a145', roughness: 0.45, metalness: 0.4 }),
@@ -529,12 +572,18 @@ export function createArchitectureAndFlora(scene) {
 
   // 5. 正中特大主峰前景拱橋亭閣 (x ∈ [-15, +11], z = 12)
   worldGroup.add(buildBridge(-15, 11, 12, getCentralBridgeY, true));
+  const bridgeLight = new THREE.PointLight('#ffcf78', 3.5, 18, 1.5);
+  bridgeLight.position.set(-2, 6.2, 12);
+  worldGroup.add(bridgeLight);
   worldGroup.add(placeOnTerrain(createSongHouse({ width: 3.4, depth: 2.4, height: 1.8 }), 4, 6.2, -0.05, 0.1));
   worldGroup.add(placeOnTerrain(createWeepingWillow(1.15), -17.5, 13.8, -0.05, 0.6));
   worldGroup.add(placeOnTerrain(createWeepingWillow(1.05), 14.2, 14.0, -0.05, -0.5));
 
   // 6. 中左層巒山寺 (x=-66, z=+4)
   worldGroup.add(placeOnTerrain(createSongHouse({ width: 4.5, depth: 3.1, height: 2.2, vermilion: true }), -66, 3.8, -0.08, 0.1));
+  const templeLight = new THREE.PointLight('#ffcf78', 3.0, 16, 1.5);
+  templeLight.position.set(-66, 7.2, 5.2);
+  worldGroup.add(templeLight);
   worldGroup.add(placeOnTerrain(createTempleGate(), -66, 7.2, -0.05, 0.1));
   worldGroup.add(placeOnTerrain(createPagoda(5), -61, 4.5, -0.08, 0));
 

@@ -270,6 +270,22 @@ export function createTerrainAndWater(scene) {
          diffuseColor.rgb = col;`
       )
       .replace(
+        '#include <normal_fragment_maps>',
+        `#include <normal_fragment_maps>
+         // Per-pixel rocky micro-relief normal perturbation using screen-space derivatives
+         float bumpH = tFbm(vWorldPos.xz * 1.45 + vec2(vWorldPos.y * 0.25, 0.0));
+         vec3 dPosX = dFdx(vViewPosition);
+         vec3 dPosY = dFdy(vViewPosition);
+         vec3 r1 = cross(dPosY, normal);
+         vec3 r2 = cross(normal, dPosX);
+         float det = dot(dPosX, r1);
+         if (abs(det) > 1e-5) {
+           float bumpStrength = mix(0.06, 0.22, smoothstep(1.5, 16.0, vWorldPos.y));
+           vec3 surfGrad = sign(det) * (dFdx(bumpH) * r1 + dFdy(bumpH) * r2);
+           normal = normalize(abs(det) * normal - bumpStrength * surfGrad);
+         }`
+      )
+      .replace(
         '#include <dithering_fragment>',
         `// 雙鉤墨線 (View-dependent Fresnel ink-outline on mountain silhouettes & ridges)
          vec3 viewDir = normalize(vViewPosition);
@@ -466,6 +482,17 @@ export function createTerrainAndWater(scene) {
         float wangjin = smoothstep(0.84, 0.94, sin(vWorldPos.z * 3.8 + sin(vWorldPos.x * 0.45 + uTime * 0.9) * 1.4));
         base = mix(base, vec3(0.24, 0.38, 0.37), wangjin * 0.22);
 
+        // Realistic Fresnel sky reflection & sun specular glint on animated water normal
+        vec3 wNormal = normalize(vec3((flow1 - 0.5) * 0.26, 1.0, (flow2 - 0.5) * 0.26));
+        vec3 viewDir = normalize(cameraPosition - vWorldPos);
+        float fresnel = pow(1.0 - max(dot(viewDir, wNormal), 0.0), 3.0);
+        base = mix(base, vec3(0.88, 0.85, 0.75), fresnel * 0.42);
+
+        vec3 sunDir = normalize(vec3(0.55, 0.72, 0.42));
+        vec3 halfVec = normalize(sunDir + viewDir);
+        float spec = pow(max(dot(wNormal, halfVec), 0.0), 96.0);
+        base += vec3(1.0, 0.95, 0.82) * spec * 0.42 * smoothstep(0.0, 0.8, vDepth);
+
         // Soft shoreline silk-ink bleed
         float shore = 1.0 - smoothstep(0.0, 0.55, vDepth);
         base = mix(base, vec3(0.90, 0.87, 0.78), shore * 0.48);
@@ -479,6 +506,31 @@ export function createTerrainAndWater(scene) {
   const waterMesh = new THREE.Mesh(waterGeo, waterMat);
   waterMesh.position.y = WATER_LEVEL;
   scene.add(waterMesh);
+
+  // --- Atmospheric Silk-Celadon Sky Dome ---
+  const skyGeo = new THREE.SphereGeometry(460, 32, 16);
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    vertexShader: `
+      varying vec3 vPos;
+      void main() {
+        vPos = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vPos;
+      void main() {
+        float h = clamp(normalize(vPos).y, 0.0, 1.0);
+        vec3 horizon = vec3(0.86, 0.84, 0.76);
+        vec3 zenith = vec3(0.73, 0.78, 0.75);
+        vec3 col = mix(horizon, zenith, pow(h, 0.65));
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `,
+  });
+  scene.add(new THREE.Mesh(skyGeo, skyMat));
 
   return { terrainMesh, waterMesh, waterUniforms };
 }
