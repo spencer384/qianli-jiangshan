@@ -2,6 +2,11 @@
 
 > 本分支 (`temp/photorealistic-scroll`) 記錄於 `2026-11-24` 針對《方琮仿王希孟江山千里卷.png》進行現實擬真化（Photorealistic Conversion）的技術盤點、切片前處理與生成方案。
 
+## 版本辨識命名
+
+- **原畫 3D 版**：`江山千里 · 3D 青綠卷 (3D-Ink)`
+- **擬真轉換版**：`江山千里 · 實景寫真卷 (3D-Real)`
+
 ---
 
 ## 1. ArtCraft 工具體系盤點結果
