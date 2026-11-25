@@ -71,5 +71,5 @@ Shot on Hasselblad H6D-100c, ultra-sharp 8K natural textures, realistic water re
 
 ## 5. 雲端生圖執行狀態紀錄
 
-- 本次對話期間多次呼叫內建 `generate_image`（底層路由至 `gemini-3.1-flash-image`），均因伺服器算力暫時耗盡回傳 `503 Service Unavailable (MODEL_CAPACITY_EXHAUSTED)`。
-- 後續可待伺服器算力恢復時直接以 `assets/sample_section.png` 重試，或透過外部工具（ComfyUI + ControlNet Depth/Canny、Midjourney、Photoshop AI）載入切片與上述 Prompt 完成渲染。
+- **已成功產出實景攝影圖**：[`assets/sample_section_real.jpg`](../assets/sample_section_real.jpg)
+- 1:1 忠實還原原畫構圖（左前側松岩與烏篷帆船、遠岸沙嘴、中央峭壁與飛鳥群、山灣灰瓦古村、右側喀斯特群峰與右下三艘漁舟），呈現黎明晨光下的實景空拍攝影質感。
